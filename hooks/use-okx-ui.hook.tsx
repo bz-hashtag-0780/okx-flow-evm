@@ -12,7 +12,7 @@ export default function useOKXUI() {
 			const uiInstance = await OKXUniversalConnectUI.init({
 				dappMetaData: {
 					name: 'My DApp',
-					icon: 'https://yourappiconurl.png',
+					icon: 'https://cryptologos.cc/logos/flow-flow-logo.png',
 				},
 				actionsConfiguration: {
 					returnStrategy: 'none',
