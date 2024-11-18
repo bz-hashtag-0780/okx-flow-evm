@@ -33,8 +33,8 @@ export default function useOKXUI() {
 			const session = await ui.openModal({
 				namespaces: {
 					eip155: {
-						chains: ['eip155:1'], // Ethereum mainnet
-						defaultChain: '1',
+						chains: ['eip155:747'], // Flow EVM
+						defaultChain: '747',
 					},
 				},
 			});
