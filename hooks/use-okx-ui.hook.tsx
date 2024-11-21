@@ -34,7 +34,7 @@ export default function useOKXUI() {
 				method: 'wallet_addEthereumChain',
 				params: [
 					{
-						chainId: '0x2EB', // Hexadecimal for 747
+						chainId: '747', // Hexadecimal for 747 - 0x2EB
 						chainName: 'Flow EVM',
 						nativeCurrency: {
 							name: 'Flow',
