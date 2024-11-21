@@ -34,7 +34,7 @@ export default function useOKXUI() {
 				method: 'wallet_addEthereumChain',
 				params: [
 					{
-						chainId: '747', // Hexadecimal for 747 - 0x2EB
+						chainId: '0x2EB', // Hexadecimal for 747
 						chainName: 'Flow EVM',
 						nativeCurrency: {
 							name: 'Flow',
@@ -49,33 +49,33 @@ export default function useOKXUI() {
 			console.log('Chain added successfully.');
 		} catch (error) {
 			console.error('Failed to add chain:', error);
+			throw error;
 		}
-	};
-
-	const checkConnection = async () => {
-		if (!ui) return false;
-		if (!ui.connected()) {
-			await openModal();
-		}
-		return true;
 	};
 
 	const openModal = async () => {
 		if (!ui) return;
 		try {
-			const chains = ui.session?.chains || [];
-			if (!chains.includes('eip155:747')) {
-				await addChain();
-			}
 			const session = await ui.openModal({
 				namespaces: {
 					eip155: {
-						chains: ['eip155:747'],
+						chains: ['eip155:1', 'eip155:747'], // Include Ethereum (1) and Flow EVM (747)
 						defaultChain: '747',
+					},
+				},
+				optionalNamespaces: {
+					eip155: {
+						chains: ['eip155:747'],
 					},
 				},
 			});
 			console.log('Session:', session);
+
+			// Check if custom chain needs to be added
+			const chains = session?.namespaces?.eip155?.chains || [];
+			if (!chains.includes('eip155:747')) {
+				await addChain();
+			}
 		} catch (error) {
 			console.error('Failed to open UI modal:', error);
 		}
@@ -96,5 +96,5 @@ export default function useOKXUI() {
 		}
 	};
 
-	return { openModal, sendTransaction, checkConnection };
+	return { openModal, sendTransaction };
 }
