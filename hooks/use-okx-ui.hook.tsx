@@ -34,15 +34,15 @@ export default function useOKXUI() {
 				method: 'wallet_addEthereumChain',
 				params: [
 					{
-						chainId: '747',
-						chainName: 'Flow',
+						chainId: '0x2EB', // Hexadecimal for 747
+						chainName: 'Flow EVM',
 						nativeCurrency: {
 							name: 'Flow',
 							symbol: 'FLOW',
 							decimals: 18,
 						},
 						rpcUrls: ['https://mainnet.evm.nodes.onflow.org'],
-						blockExplorerUrls: ['https://evm.flowscan.io/'], // Optional
+						blockExplorerUrls: ['https://evm.flowscan.io/'],
 					},
 				],
 			});
@@ -52,15 +52,25 @@ export default function useOKXUI() {
 		}
 	};
 
+	const checkConnection = async () => {
+		if (!ui) return false;
+		if (!ui.connected()) {
+			await openModal();
+		}
+		return true;
+	};
+
 	const openModal = async () => {
 		if (!ui) return;
 		try {
-			// Add the chain before opening the modal
-			await addChain();
+			const chains = ui.session?.chains || [];
+			if (!chains.includes('eip155:747')) {
+				await addChain();
+			}
 			const session = await ui.openModal({
 				namespaces: {
 					eip155: {
-						chains: ['eip155:747'], // Flow EVM
+						chains: ['eip155:747'],
 						defaultChain: '747',
 					},
 				},
@@ -71,5 +81,20 @@ export default function useOKXUI() {
 		}
 	};
 
-	return { openModal };
+	const sendTransaction = async (txParams: any) => {
+		if (!ui) return;
+		try {
+			const result = await ui.provider.request({
+				method: 'eth_sendTransaction',
+				params: [txParams],
+			});
+			console.log('Transaction sent:', result);
+			return result;
+		} catch (error) {
+			console.error('Failed to send transaction:', error);
+			throw error;
+		}
+	};
+
+	return { openModal, sendTransaction, checkConnection };
 }
