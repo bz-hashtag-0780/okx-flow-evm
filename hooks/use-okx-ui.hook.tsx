@@ -70,6 +70,7 @@ export default function useOKXUI() {
 				},
 			});
 			console.log('Session:', session);
+			await addChain();
 
 			// Check if custom chain needs to be added
 			const chains = session?.namespaces?.eip155?.chains || [];
