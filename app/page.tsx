@@ -1,94 +1,95 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useRef, useState } from 'react';
+import { OKXUniversalConnectUI, THEME } from '@okxconnect/ui';
 
-// import { useAuth } from '@/context/AuthContext';
+const flowChainConfig = {
+	chainId: '747',
+	chainName: 'Flow',
+	nativeCurrency: {
+		name: 'Flow',
+		symbol: 'FLOW',
+		decimals: 18,
+	},
+	rpcUrls: ['https://mainnet.evm.nodes.onflow.org'],
+	blockExplorerUrls: ['https://evm.flowscan.io/'],
+};
 
-// export default function Home() {
-// 	const { walletAddress, logIn, logOut } = useAuth();
+export default function HomePage() {
+	const universalUi = useRef<OKXUniversalConnectUI | null>(null);
+	const [walletAddress, setWalletAddress] = useState('');
 
-// 	return (
-// 		<div className="page-container">
-// 			<div className="card">
-// 				<h1 className="card-title">Connect OKX Wallet</h1>
-// 				{walletAddress ? (
-// 					<div>
-// 						<p>Connected: {walletAddress}</p>
-// 						<button onClick={logOut}>Disconnect</button>
-// 					</div>
-// 				) : (
-// 					<button onClick={logIn} className="button button-connect">
-// 						Connect Wallet
-// 					</button>
-// 				)}
-// 			</div>
-// 		</div>
-// 	);
-// }
+	const initOKXUI = async () => {
+		universalUi.current = await OKXUniversalConnectUI.init({
+			dappMetaData: {
+				icon: 'https://cryptologos.cc/logos/flow-flow-logo.png',
+				name: 'Flow DApp',
+			},
+			uiPreferences: {
+				theme: THEME.LIGHT,
+			},
+		});
+	};
 
-'use client';
+	useEffect(() => {
+		initOKXUI();
+	}, []);
 
-import { useAuth } from '@/context/AuthContext';
-import useOKXUI from '@/hooks/use-okx-ui.hook';
+	const handleConnectWallet = async () => {
+		if (!universalUi.current) return;
 
-export default function Home() {
-	const { openModal } = useOKXUI();
-	const { walletAddress, logIn, logOut, addChain } = useAuth();
+		try {
+			const session: any = await universalUi.current.openModal({
+				namespaces: {
+					eip155: {
+						chains: ['eip155:747'],
+						rpcMap: {
+							747: flowChainConfig.rpcUrls[0],
+						},
+						defaultChain: '747',
+					},
+				},
+			});
+
+			const account = session.namespaces.eip155.accounts[0];
+			setWalletAddress(account.split(':')[2]); // Extract address
+
+			// Ensure the Flow EVM chain is added
+			await universalUi.current.request({
+				method: 'wallet_addEthereumChain',
+				params: [flowChainConfig],
+			});
+		} catch (error) {
+			console.error('Connection failed:', error);
+		}
+	};
+
+	const handleDisconnectWallet = async () => {
+		if (universalUi.current) {
+			await universalUi.current.disconnect();
+			setWalletAddress('');
+		}
+	};
 
 	return (
-		<div style={{ textAlign: 'center', marginTop: '50px' }}>
-			<h1>OKX Wallet Integration with UI</h1>
-
-			<button
-				onClick={openModal}
-				style={{
-					padding: '10px 20px',
-					marginTop: '20px',
-					fontSize: '16px',
-					cursor: 'pointer',
-				}}
-				className="button button-connect"
-			>
-				Connect Wallet
-			</button>
+		<div style={{ textAlign: 'center', padding: '2rem' }}>
+			<h1>Flow EVM Wallet Connection</h1>
 			{walletAddress ? (
-				<button
-					onClick={logOut}
-					style={{
-						padding: '10px 20px',
-						marginTop: '20px',
-						fontSize: '16px',
-						cursor: 'pointer',
-					}}
-					className="button button-connect"
-				>
-					Disconnect Wallet
-				</button>
-			) : (
 				<>
+					<p>Connected to Wallet: {walletAddress}</p>
 					<button
-						onClick={logIn}
-						style={{
-							padding: '10px 20px',
-							marginTop: '20px',
-							fontSize: '16px',
-							cursor: 'pointer',
-						}}
-						className="button button-connect"
+						className="button button-disconnect"
+						onClick={handleDisconnectWallet}
 					>
-						log in
-					</button>
-					<button
-						onClick={addChain}
-						style={{
-							padding: '10px 20px',
-							marginTop: '20px',
-							fontSize: '16px',
-							cursor: 'pointer',
-						}}
-					>
-						addChain
+						Disconnect
 					</button>
 				</>
+			) : (
+				<button
+					className="button button-connect"
+					onClick={handleConnectWallet}
+				>
+					Connect Wallet
+				</button>
 			)}
 		</div>
 	);
