@@ -46,6 +46,7 @@ export default function Home() {
 					fontSize: '16px',
 					cursor: 'pointer',
 				}}
+				className="button button-connect"
 			>
 				Connect Wallet
 			</button>
@@ -58,21 +59,36 @@ export default function Home() {
 						fontSize: '16px',
 						cursor: 'pointer',
 					}}
+					className="button button-connect"
 				>
 					Disconnect Wallet
 				</button>
 			) : (
-				<button
-					onClick={addChain}
-					style={{
-						padding: '10px 20px',
-						marginTop: '20px',
-						fontSize: '16px',
-						cursor: 'pointer',
-					}}
-				>
-					addChain
-				</button>
+				<>
+					<button
+						onClick={logIn}
+						style={{
+							padding: '10px 20px',
+							marginTop: '20px',
+							fontSize: '16px',
+							cursor: 'pointer',
+						}}
+						className="button button-connect"
+					>
+						log in
+					</button>
+					<button
+						onClick={addChain}
+						style={{
+							padding: '10px 20px',
+							marginTop: '20px',
+							fontSize: '16px',
+							cursor: 'pointer',
+						}}
+					>
+						addChain
+					</button>
+				</>
 			)}
 		</div>
 	);
