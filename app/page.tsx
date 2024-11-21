@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // 'use client';
 
 // import { useAuth } from '@/context/AuthContext';
@@ -26,14 +27,17 @@
 
 'use client';
 
+import { useAuth } from '@/context/AuthContext';
 import useOKXUI from '@/hooks/use-okx-ui.hook';
 
 export default function Home() {
 	const { openModal } = useOKXUI();
+	const { walletAddress, logIn, logOut, addChain } = useAuth();
 
 	return (
 		<div style={{ textAlign: 'center', marginTop: '50px' }}>
 			<h1>OKX Wallet Integration with UI</h1>
+
 			<button
 				onClick={openModal}
 				style={{
@@ -45,6 +49,31 @@ export default function Home() {
 			>
 				Connect Wallet
 			</button>
+			{walletAddress ? (
+				<button
+					onClick={logOut}
+					style={{
+						padding: '10px 20px',
+						marginTop: '20px',
+						fontSize: '16px',
+						cursor: 'pointer',
+					}}
+				>
+					Disconnect Wallet
+				</button>
+			) : (
+				<button
+					onClick={addChain}
+					style={{
+						padding: '10px 20px',
+						marginTop: '20px',
+						fontSize: '16px',
+						cursor: 'pointer',
+					}}
+				>
+					addChain
+				</button>
+			)}
 		</div>
 	);
 }

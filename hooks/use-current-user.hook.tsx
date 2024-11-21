@@ -21,18 +21,48 @@ export default function useUser() {
 		initProvider();
 	}, []);
 
+	const addChain = async () => {
+		if (!provider) return;
+		try {
+			await provider.request({
+				method: 'wallet_addEthereumChain',
+				params: [
+					{
+						chainId: '747',
+						chainName: 'Flow',
+						nativeCurrency: {
+							name: 'Flow',
+							symbol: 'FLOW',
+							decimals: 18,
+						},
+						rpcUrls: ['https://mainnet.evm.nodes.onflow.org'],
+						blockExplorerUrls: ['https://evm.flowscan.io/'], // Optional
+					},
+				],
+			});
+		} catch (error) {
+			console.error('Error adding chain:', error);
+		}
+	};
+
 	const logIn = async () => {
 		if (!provider) return;
-		const session = await provider.connect({
-			namespaces: {
-				eip155: {
-					chains: ['eip155:747'], // Add other chains if needed chains: ["eip155:1", "eip155:xxx"],
-					defaultChain: '747',
+		// Ensure the chain is added before connecting
+		await addChain();
+		try {
+			const session = await provider.connect({
+				namespaces: {
+					eip155: {
+						chains: ['eip155:747'], // Add other chains if needed chains: ["eip155:1", "eip155:xxx"],
+						defaultChain: '747',
+					},
 				},
-			},
-		});
-		const accounts = session?.accounts || [];
-		setWalletAddress(accounts[0] || null);
+			});
+			const accounts = session?.accounts || [];
+			setWalletAddress(accounts[0] || null);
+		} catch (error) {
+			console.error('Error logging in:', error);
+		}
 	};
 
 	const logOut = () => {
@@ -40,5 +70,5 @@ export default function useUser() {
 		setWalletAddress(null);
 	};
 
-	return { walletAddress, logIn, logOut };
+	return { walletAddress, logIn, logOut, addChain };
 }
