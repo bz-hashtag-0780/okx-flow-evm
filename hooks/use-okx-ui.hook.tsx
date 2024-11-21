@@ -59,7 +59,7 @@ export default function useOKXUI() {
 			const session = await ui.openModal({
 				namespaces: {
 					eip155: {
-						chains: ['eip155:1', 'eip155:747'], // Include Ethereum (1) and Flow EVM (747)
+						chains: ['eip155:747'], // Include Ethereum (1) and Flow EVM (747)
 						defaultChain: '747',
 					},
 				},

@@ -57,6 +57,11 @@ export default function useUser() {
 						defaultChain: '747',
 					},
 				},
+				optionalNamespaces: {
+					eip155: {
+						chains: ['eip155:747'],
+					},
+				},
 			});
 			const accounts = session?.accounts || [];
 			setWalletAddress(accounts[0] || null);
