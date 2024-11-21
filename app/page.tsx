@@ -142,6 +142,12 @@ export default function HomePage() {
 							const session = await client.openModal({
 								namespaces: {
 									eip155: {
+										chains: ['eip155:1', 'eip155:747'],
+										defaultChain: '1',
+									},
+								},
+								optionalNamespaces: {
+									eip155: {
 										chains: ['eip155:747'],
 										defaultChain: '747',
 										rpcMap: {
