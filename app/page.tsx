@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useRef, useState } from 'react';
@@ -16,60 +18,90 @@ const flowChainConfig = {
 };
 
 export default function HomePage() {
-	const universalUi = useRef<OKXUniversalConnectUI | null>(null);
-	const [walletAddress, setWalletAddress] = useState('');
-
-	const initOKXUI = async () => {
-		universalUi.current = await OKXUniversalConnectUI.init({
-			dappMetaData: {
-				icon: 'https://cryptologos.cc/logos/flow-flow-logo.png',
-				name: 'Flow DApp',
-			},
-			uiPreferences: {
-				theme: THEME.LIGHT,
-			},
-		});
-	};
+	const [client, setClient] = useState<OKXUniversalConnectUI | null>(null);
+	const [walletAddress, setWalletAddress] = useState<any>('');
+	const initRef = useRef(false);
 
 	useEffect(() => {
-		initOKXUI();
+		async function initClient() {
+			if (initRef.current) return;
+			initRef.current = true;
+
+			try {
+				const client = await OKXUniversalConnectUI.init({
+					dappMetaData: {
+						icon: 'https://cryptologos.cc/logos/flow-flow-logo.png',
+						name: 'Flow DApp',
+					},
+					actionsConfiguration: {
+						returnStrategy: 'none',
+						modals: 'all',
+					},
+					uiPreferences: {
+						theme: THEME.LIGHT,
+					},
+				});
+				setClient(client);
+			} catch (e) {
+				console.error('Error initializing client:', e);
+			} finally {
+				initRef.current = false;
+			}
+		}
+		initClient();
 	}, []);
 
-	const handleConnectWallet = async () => {
-		if (!universalUi.current) return;
+	// const initOKXUI = async () => {
+	// 	universalUi.current = await OKXUniversalConnectUI.init({
+	// 		dappMetaData: {
+	// 			icon: 'https://cryptologos.cc/logos/flow-flow-logo.png',
+	// 			name: 'Flow DApp',
+	// 		},
+	// 		uiPreferences: {
+	// 			theme: THEME.LIGHT,
+	// 		},
+	// 	});
+	// };
 
-		try {
-			const session: any = await universalUi.current.openModal({
-				namespaces: {
-					eip155: {
-						chains: ['eip155:747'],
-						rpcMap: {
-							747: flowChainConfig.rpcUrls[0],
-						},
-						defaultChain: '747',
-					},
-				},
-			});
+	// useEffect(() => {
+	// 	initOKXUI();
+	// }, []);
 
-			const account = session.namespaces.eip155.accounts[0];
-			setWalletAddress(account.split(':')[2]); // Extract address
+	// const handleConnectWallet = async () => {
+	// 	if (!universalUi.current) return;
 
-			// Ensure the Flow EVM chain is added
-			await universalUi.current.request({
-				method: 'wallet_addEthereumChain',
-				params: [flowChainConfig],
-			});
-		} catch (error) {
-			console.error('Connection failed:', error);
-		}
-	};
+	// 	try {
+	// 		const session: any = await universalUi.current.openModal({
+	// 			namespaces: {
+	// 				eip155: {
+	// 					chains: ['eip155:747'],
+	// 					rpcMap: {
+	// 						747: flowChainConfig.rpcUrls[0],
+	// 					},
+	// 					defaultChain: '747',
+	// 				},
+	// 			},
+	// 		});
 
-	const handleDisconnectWallet = async () => {
-		if (universalUi.current) {
-			await universalUi.current.disconnect();
-			setWalletAddress('');
-		}
-	};
+	// 		const account = session.namespaces.eip155.accounts[0];
+	// 		setWalletAddress(account.split(':')[2]); // Extract address
+
+	// 		// Ensure the Flow EVM chain is added
+	// 		await universalUi.current.request({
+	// 			method: 'wallet_addEthereumChain',
+	// 			params: [flowChainConfig],
+	// 		});
+	// 	} catch (error) {
+	// 		console.error('Connection failed:', error);
+	// 	}
+	// };
+
+	// const handleDisconnectWallet = async () => {
+	// 	if (universalUi.current) {
+	// 		await universalUi.current.disconnect();
+	// 		setWalletAddress('');
+	// 	}
+	// };
 
 	return (
 		<div style={{ textAlign: 'center', padding: '2rem' }}>
@@ -79,7 +111,10 @@ export default function HomePage() {
 					<p>Connected to Wallet: {walletAddress}</p>
 					<button
 						className="button button-disconnect"
-						onClick={handleDisconnectWallet}
+						onClick={async () => {
+							await client?.disconnect();
+							setWalletAddress('');
+						}}
 					>
 						Disconnect
 					</button>
@@ -87,7 +122,55 @@ export default function HomePage() {
 			) : (
 				<button
 					className="button button-connect"
-					onClick={handleConnectWallet}
+					onClick={async () => {
+						try {
+							if (initRef.current) {
+								alert(
+									'Please wait for the client to initialize.'
+								);
+								return;
+							}
+							if (!client) {
+								alert('Client not initialized.');
+								return;
+							}
+							if (client.connected()) {
+								await client.disconnect();
+							}
+
+							const session = await client.openModal({
+								namespaces: {
+									eip155: {
+										chains: ['eip155:747'],
+										defaultChain: '747',
+										rpcMap: {
+											747: flowChainConfig.rpcUrls[0],
+										},
+									},
+								},
+							});
+
+							if (session) {
+								const addressWithChain =
+									session.namespaces.eip155.accounts[0];
+								if (
+									!session.namespaces.eip155.chains.includes(
+										'eip155:747'
+									)
+								) {
+									await client.request({
+										method: 'wallet_addEthereumChain',
+										params: [flowChainConfig],
+									});
+								}
+								setWalletAddress(addressWithChain);
+							} else {
+								throw new Error('Init session failed');
+							}
+						} catch (e) {
+							alert('Connection failed:');
+						}
+					}}
 				>
 					Connect Wallet
 				</button>
